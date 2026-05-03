@@ -1,57 +1,42 @@
 import streamlit as st
 import datetime
 
-# Configuration de la page
-st.set_page_config(page_title="Mon Assistant Budget", page_icon="💰", layout="centered")
-
 st.title("💰 Mon Assistant Budget")
 
 # --- ENTRÉES ---
-with st.expander("📝 Saisie des données", expanded=True):
-    salaire = st.number_input("1. Votre salaire net (€)", min_value=0.0, step=10.0, value=0.0)
-    solde_compte = st.number_input("2. Votre solde actuel (€)", step=10.0, value=0.0)
-    date_paie = st.date_input("3. Date de la prochaine paie")
+salaire = st.number_input("1. Salaire net (€)", min_value=0.0, step=100.0)
+solde_compte = st.number_input("2. Solde actuel du compte (€)", step=10.0)
+date_paie = st.date_input("3. Date de la prochaine paie")
 
-# --- CALCULS ET AFFICHAGE ---
-if salaire > 0:
-    # Logique de calcul
+if st.button("Calculer mon budget"):
+    # --- CALCULS ---
     budget_vie = salaire * 0.5
     budget_epargne = salaire * 0.2
     reste_a_vivre_salaire = salaire * 0.3
     nouveau_solde_disponible = reste_a_vivre_salaire + solde_compte
     
     jours_restants = (date_paie - datetime.date.today()).days
-    nb_jours = jours_restants if jours_restants > 0 else 1
-    budget_quotidien = nouveau_solde_disponible / nb_jours
+    diviseur = jours_restants if jours_restants > 0 else 1
+    budget_quotidien = nouveau_solde_disponible / diviseur
 
+    # --- AFFICHAGE ---
     st.divider()
-
-    # Affichage en colonnes (Design "Metric")
-    col1, col2, col3 = st.columns(3)
-    col1.metric("Coût Vie", f"{budget_vie:.0f}€")
-    col2.metric("Épargne", f"{budget_epargne:.0f}€")
-    col3.metric("Reste", f"{reste_a_vivre_salaire:.0f}€")
-
-    st.write("---")
-
-    # Résultats principaux
-    st.subheader("Résultats de gestion")
-    st.info(f"*Total disponible (Ligne 4) :* {nouveau_solde_disponible:.2f} €")
+    st.subheader("Résultats")
+    col1, col2 = st.columns(2)
     
-    label_jours = f"Budget quotidien ({nb_jours} jours restants)" if jours_restants > 0 else "Budget quotidien (Paie aujourd'hui)"
-    st.success(f"*{label_jours} :* {budget_quotidien:.2f} € / jour")
+    with col1:
+        st.write(f"*Coût de vie (50%) :* {budget_vie:.2f} €")
+        st.write(f"*Épargne (20%) :* {budget_epargne:.2f} €")
+        st.write(f"*Reste à vivre (30%) :* {reste_a_vivre_salaire:.2f} €")
+    
+    with col2:
+        st.metric("Total Disponible", f"{nouveau_solde_disponible:.2f} €")
+        st.metric("Budget Quotidien", f"{budget_quotidien:.2f} €/j")
 
     # --- AMORTISSEMENT ---
-    st.write("---")
-    st.subheader("🛒 Simulateur d'achat")
-    # C'est ici qu'il manquait la parenthèse sur ta photo !
-    somme_amortir = st.number_input("Combien veux-tu amortir ? (€)", min_value=0.0, value=0.0)
-    
-    if somme_amortir > 0:
-        if budget_quotidien > 0:
-            jours_necessaires = somme_amortir / budget_quotidien
-            st.warning(f"🕒 *Amortissement :* Il te faudra environ *{jours_necessaires:.1f} jours* de ton budget quotidien.")
-        else:
-            st.error("Budget quotidien trop faible.")
-else:
-    st.info("👋 Bienvenue ! Entre ton salaire pour commencer.")
+    st.divider()
+    st.subheader("Simulateur d'achat")
+    somme = st.number_input("Montant de l'achat à amortir (€)", min_value=0.0)
+    if somme > 0 and budget_quotidien > 0:
+        jours = somme / budget_quotidien
+        st.info(f"Il vous faudra *{jours:.1f} jours* de budget quotidien pour amortir cet achat.")
