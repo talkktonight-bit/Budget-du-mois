@@ -1,19 +1,18 @@
 import streamlit as st
 import datetime
 
-# Configuration de la page pour un look "Appli"
+# Configuration de la page
 st.set_page_config(page_title="Mon Assistant Budget", page_icon="💰", layout="centered")
 
 st.title("💰 Mon Assistant Budget")
 
 # --- ENTRÉES ---
-# On regroupe les entrées dans un bloc propre
 with st.expander("📝 Saisie des données", expanded=True):
     salaire = st.number_input("1. Votre salaire net (€)", min_value=0.0, step=10.0, value=0.0)
     solde_compte = st.number_input("2. Votre solde actuel (€)", step=10.0, value=0.0)
     date_paie = st.date_input("3. Date de la prochaine paie")
 
-# --- CALCULS ET AFFICHAGE STYLE "APP" ---
+# --- CALCULS ET AFFICHAGE ---
 if salaire > 0:
     # Logique de calcul
     budget_vie = salaire * 0.5
@@ -27,7 +26,7 @@ if salaire > 0:
 
     st.divider()
 
-    # Affichage en colonnes (le plus beau sur mobile)
+    # Affichage en colonnes (Design "Metric")
     col1, col2, col3 = st.columns(3)
     col1.metric("Coût Vie", f"{budget_vie:.0f}€")
     col2.metric("Épargne", f"{budget_epargne:.0f}€")
@@ -35,10 +34,8 @@ if salaire > 0:
 
     st.write("---")
 
-    # Résultats principaux mis en avant
+    # Résultats principaux
     st.subheader("Résultats de gestion")
-    
-    # Ligne 4 et 5 avec un style visuel fort
     st.info(f"*Total disponible (Ligne 4) :* {nouveau_solde_disponible:.2f} €")
     
     label_jours = f"Budget quotidien ({nb_jours} jours restants)" if jours_restants > 0 else "Budget quotidien (Paie aujourd'hui)"
@@ -47,4 +44,14 @@ if salaire > 0:
     # --- AMORTISSEMENT ---
     st.write("---")
     st.subheader("🛒 Simulateur d'achat")
-    somme_amortir = st.number_input("Combien veux-tu amortir ? (€)", min_value=0
+    # C'est ici qu'il manquait la parenthèse sur ta photo !
+    somme_amortir = st.number_input("Combien veux-tu amortir ? (€)", min_value=0.0, value=0.0)
+    
+    if somme_amortir > 0:
+        if budget_quotidien > 0:
+            jours_necessaires = somme_amortir / budget_quotidien
+            st.warning(f"🕒 *Amortissement :* Il te faudra environ *{jours_necessaires:.1f} jours* de ton budget quotidien.")
+        else:
+            st.error("Budget quotidien trop faible.")
+else:
+    st.info("👋 Bienvenue ! Entre ton salaire pour commencer.")
